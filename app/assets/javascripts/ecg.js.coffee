@@ -16,15 +16,15 @@ class ECGGraph
     @width = 960 - @margin.left - @margin.right
     @height = 500 - @margin.top - @margin.bottom
 
-    x = d3.scale.linear().domain([0, @num_width - 1]).range([0, @width])
+    @x = d3.scale.linear().domain([0, @num_width - 1]).range([0, @width])
 
-    y = d3.scale.linear().domain([-1, 1]).range([@height, 0])
+    @y = d3.scale.linear().domain([-1, 1]).range([@height, 0])
 
-    @line = d3.svg.line().interpolate('cardinal').x((d, i) ->
-      return x(i)
-    ).y((d, i) ->
-      return y(d)
-    )
+    @line = d3.svg.line().interpolate('cardinal')
+      .x((d, i) =>
+        return @x(i))
+      .y((d, i) =>
+        return @y(d))
 
     @svg = d3.select(selector).append("svg")
       .attr("width", 960)
@@ -32,6 +32,15 @@ class ECGGraph
       .append("g")
       .attr("transform", "translate(" + @margin.left + "," + @margin.top + ")")
 
+    @draw_guides()
+
+    @path = @svg.append("g")
+      .attr("clip-path", "url(#clip)")
+      .append("path")
+      .datum(@data)
+      .attr("class", "line")
+      .attr("d", @line)
+  draw_guides: ->
     @svg.append("defs").append("clipPath")
       .attr("id", "clip")
       .append("rect")
@@ -40,19 +49,12 @@ class ECGGraph
 
     @svg.append("g")
       .attr("class", "x axis")
-      .attr("transform", "translate(0," + y(0) + ")")
-      .call(d3.svg.axis().scale(x).orient("bottom"))
+      .attr("transform", "translate(0," + @y(0) + ")")
+      .call(d3.svg.axis().scale(@x).orient("bottom"))
 
     @svg.append("g")
       .attr("class", "y axis")
-      .call(d3.svg.axis().scale(y).orient("left"))
-
-    @path = @svg.append("g")
-      .attr("clip-path", "url(#clip)")
-      .append("path")
-      .datum(@data)
-      .attr("class", "line")
-      .attr("d", @line)
+      .call(d3.svg.axis().scale(@y).orient("left"))
   draw_pattern: (pattern) ->
     window.pattern = pattern
     number = pattern.next_number()
